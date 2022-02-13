@@ -33,3 +33,28 @@ def column_splitter(df):
     for index, name in enumerate(name_of_df):
         print(f"{index}: {name}")
     return list_of_dfs
+
+def numerical_distributions(df):
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    sns.set_palette('rocket')
+    
+    fig, axes = plt.subplots(2, 1, figsize=(10,12))
+
+    sns.boxenplot(ax=axes[0], data=df_num)
+    sns.ecdfplot(ax=axes[1], data=df_num)
+
+
+def relationships(df):
+    import seaborn as sns
+    sns.set_palette('rocket')
+    
+    pairplot = sns.PairGrid(data=df, height=3)
+
+    pairplot = pairplot.map_lower(sns.regplot)
+    pairplot = pairplot.map_diag(sns.boxenplot)
+
+    
+    
+    
+    
