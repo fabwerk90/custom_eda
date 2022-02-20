@@ -34,6 +34,7 @@ def column_splitter(df):
         print(f"{index}: {name}")
     return list_of_dfs
 
+
 def numerical_distributions(df):
     import matplotlib.pyplot as plt
     import seaborn as sns
@@ -53,6 +54,89 @@ def relationships(df):
 
     pairplot = pairplot.map_lower(sns.regplot)
     pairplot = pairplot.map_diag(sns.boxenplot)
+
+    
+def correlations(df):
+    import matplotlib.pyplot as plt
+    from heatmap import heatmap, corrplot
+    import phik
+
+    df_list = []
+    
+    pearson_df = df.corr()
+    df_list.append(pearson_df)
+    corrplot(pearson_df)
+    print("Pearson Correlation:")
+    plt.show()
+    
+    kendall_df = df.corr(method='kendall')
+    df_list.append(kendall_df)
+    corrplot(kendall_df)
+    print("Kendall Correlation:")
+    plt.show()
+    
+    spearman_df = df.corr(method='spearman')
+    df_list.append(spearman_df)
+    corrplot(spearman_df)
+    print("Spearman Correlation:")
+    plt.show()
+    
+    phi_k_df = df.phik_matrix()
+    df_list.append(phi_k_df)
+    corrplot(phi_k_df)
+    print("Phi k Correlation:")
+    plt.show()
+    
+    return df_list
+
+
+def categories(df, category, numerical):
+    import seaborn as sns
+    sns.catplot(x=category, y=numerical, kind="boxen",data=df)
+    
+    
+def text_eda(df, string_column):
+    import re
+    import string
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from wordcloud import WordCloud
+    
+    custom_punctuation = string.punctuation.replace("-","")
+    
+    
+    text_list = df[f"{string_column}"].to_list()
+    
+    text_len = [len(text) for text in text_list]
+    word_count = [len(text.split()) for text in text_list]
+    
+    sns.boxenplot(data=text_len)
+    plt.title("Text Length Distribution")
+    plt.show()
+    
+    sns.boxenplot(data=word_count)
+    plt.title("Word Count Distribution")
+    plt.show()
+    
+    text_lower = [text.lower() for text in text_list]
+    text_no_digits = [re.sub('\w*\d\w*','', text) for text in text_lower]
+    text_no_punctuation = [re.sub('[%s]' % re.escape(custom_punctuation), '', text) for text in text_no_digits]
+    text_no_whitespaces = [re.sub(' +',' ', text) for text in text_no_punctuation]
+    cleaned_text = text_no_whitespaces
+    text_corpus = " ".join(cleaned_text)
+    
+    wordcloud = WordCloud(max_font_size=50, max_words=100, background_color="white").generate(text_corpus)
+    plt.figure()
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.title("Word Occurences")
+    plt.show()
+    
+    df.loc[:,"len_text"] = text_len
+    df.loc[:,"word_count"] = word_count
+    df.loc[:,"cleaned_text"] = cleaned_text
+    
+    return df
 
     
     
