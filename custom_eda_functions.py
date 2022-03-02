@@ -42,8 +42,10 @@ def numerical_distributions(df):
     
     fig, axes = plt.subplots(2, 1, figsize=(10,12))
 
-    sns.boxenplot(ax=axes[0], data=df_num)
-    sns.ecdfplot(ax=axes[1], data=df_num)
+    sns.boxenplot(ax=axes[0], data=df)
+    sns.ecdfplot(ax=axes[1], data=df)
+    
+    return fig
 
 
 def relationships(df):
@@ -54,6 +56,8 @@ def relationships(df):
 
     pairplot = pairplot.map_lower(sns.regplot)
     pairplot = pairplot.map_diag(sns.boxenplot)
+    
+    return pairplot
 
     
 def correlations(df):
@@ -110,11 +114,13 @@ def text_eda(df, string_column):
     text_len = [len(text) for text in text_list]
     word_count = [len(text.split()) for text in text_list]
     
-    sns.boxenplot(data=text_len)
+    fig, axes = plt.subplots(1, 2, figsize=(8,10))
+    
+    sns.boxenplot(ax=axes[0], data=text_len)
     plt.title("Text Length Distribution")
     plt.show()
     
-    sns.boxenplot(data=word_count)
+    sns.boxenplot(ax=axes[1], data=word_count)
     plt.title("Word Count Distribution")
     plt.show()
     
@@ -136,7 +142,7 @@ def text_eda(df, string_column):
     df.loc[:,"word_count"] = word_count
     df.loc[:,"cleaned_text"] = cleaned_text
     
-    return df
+    return fig
 
     
     
