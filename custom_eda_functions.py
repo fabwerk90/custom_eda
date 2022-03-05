@@ -6,32 +6,21 @@ def column_splitter(df):
     list_of_dfs = []
     name_of_df = []
     
+    if "int64" or "float64" or "bool" in dtypes:
+        df_numericals = df.select_dtypes(include=['int64', 'float64', 'bool'])
+        list_of_dfs.append(df_numericals)
+        name_of_df.append("df_numericals")
+    
     if "object" in dtypes:
         df_strings = df.select_dtypes(include='object')
         list_of_dfs.append(df_strings)
         name_of_df.append("df_strings")
-    
-    if "int64" or "float64" in dtypes:
-        df_numericals = df.select_dtypes(include=['int64', 'float64'])
-        list_of_dfs.append(df_numericals)
-        name_of_df.append("df_numericals")
-    
-    if "bool" in dtypes:
-        df_bools = df.select_dtypes(include='bool')
-        list_of_dfs.append(df_bools)
-        name_of_df.append("df_bools")
     
     if "datetime64" in dtypes:
         df_datetimes = df.select_dtypes(include='datetime64')
         list_of_dfs.append(df_datetimes)
         name_of_df.append("df_datetimes")
     
-    
-    print(f"Found {len(list_of_dfs)} different column types.")
-    print(f"Created following dfs with corresponding index:")
-    print("------------------------------------------------")
-    for index, name in enumerate(name_of_df):
-        print(f"{index}: {name}")
     return list_of_dfs
 
 
@@ -99,37 +88,39 @@ def categories(df, category, numerical):
     sns.catplot(x=category, y=numerical, kind="boxen",data=df)
     
     
-def text_eda(df, string_column):
+def text_cleaning(df):
     import re
     import string
+    custom_punctuation = string.punctuation.replace("-","")
+
+    for col in df.columns:
+
+        text_list = df[f"{col}"].to_list()
+
+        text_len = [len(text) for text in text_list]
+        word_count = [len(text.split()) for text in text_list]
+
+        text_lower = [text.lower() for text in text_list]
+        text_no_digits = [re.sub('\w*\d\w*','', text) for text in text_lower]
+        text_no_punctuation = [re.sub('[%s]' % re.escape(custom_punctuation), '', text) for text in text_no_digits]
+        text_no_whitespaces = [re.sub(' +',' ', text) for text in text_no_punctuation]
+        cleaned_text = text_no_whitespaces
+        text_corpus = " ".join(cleaned_text)
+
+        df.loc[:,f"{col}_len_text"] = text_len
+        df.loc[:,f"{col}_word_count"] = word_count
+        df.loc[:,f"{col}_cleaned_text"] = cleaned_text
+    
+    return df
+
+def text_plots(df, string_column):
     import matplotlib.pyplot as plt
     import seaborn as sns
     from wordcloud import WordCloud
     
-    custom_punctuation = string.punctuation.replace("-","")
+    text_len = sns.boxenplot(data=text_len)
     
-    
-    text_list = df[f"{string_column}"].to_list()
-    
-    text_len = [len(text) for text in text_list]
-    word_count = [len(text.split()) for text in text_list]
-    
-    fig, axes = plt.subplots(1, 2, figsize=(8,10))
-    
-    sns.boxenplot(ax=axes[0], data=text_len)
-    plt.title("Text Length Distribution")
-    plt.show()
-    
-    sns.boxenplot(ax=axes[1], data=word_count)
-    plt.title("Word Count Distribution")
-    plt.show()
-    
-    text_lower = [text.lower() for text in text_list]
-    text_no_digits = [re.sub('\w*\d\w*','', text) for text in text_lower]
-    text_no_punctuation = [re.sub('[%s]' % re.escape(custom_punctuation), '', text) for text in text_no_digits]
-    text_no_whitespaces = [re.sub(' +',' ', text) for text in text_no_punctuation]
-    cleaned_text = text_no_whitespaces
-    text_corpus = " ".join(cleaned_text)
+    word_count = sns.boxenplot(data=word_count)
     
     wordcloud = WordCloud(max_font_size=50, max_words=100, background_color="white").generate(text_corpus)
     plt.figure()
@@ -138,11 +129,7 @@ def text_eda(df, string_column):
     plt.title("Word Occurences")
     plt.show()
     
-    df.loc[:,"len_text"] = text_len
-    df.loc[:,"word_count"] = word_count
-    df.loc[:,"cleaned_text"] = cleaned_text
-    
-    return fig
+    return text_len, word_count
 
     
     
